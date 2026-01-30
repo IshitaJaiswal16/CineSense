@@ -1,21 +1,47 @@
-# 🎬 Movie Recommendation Engine
+# 🎬 CineSense
 
-A production-ready movie recommendation system with content-based filtering, personalized preferences, and support for **any dataset format** (TMDB, IMDB, MovieLens, or custom).
+**AI-Powered Movie Preference & Ranking System**
 
-![Demo](https://via.placeholder.com/800x400.png?text=Movie+Recommendation+System)
+CineSense is a **production-oriented movie recommendation system** designed to demonstrate
+**end-to-end data engineering pipelines combined with applied machine learning**.
+
+CineSense focuses on:
+- **schema-flexible data ingestion**
+- **clean modular architecture**
+- **applied ML signals over real-world datasets**
+- **multiple consumption layers (API, CLI, Web UI)**
+
+It supports industry-standard datasets such as **TMDB, IMDB, MovieLens**, as well as **custom CSV formats**
+through configurable schemas — making it adaptable, extensible, and production-ready.
 
 ---
 
-## Features
+## 🚀 Key Capabilities
 
-- 🎯 **Content-Based Filtering** - TF-IDF + genre similarity
-- 🎨 **Personalization** - User preference weighting (no hard filters)
-- 🔌 **Any Dataset** - Auto-detects TMDB, IMDB, MovieLens, or custom formats
-- 🌐 **Web UI** - Beautiful Streamlit interface with search
-- 💻 **CLI Tool** - Command-line interface for quick queries
-- ⚡ **Fast** - Feature caching, sub-second recommendations
-- 🏗️ **Clean Architecture** - Modular, testable, extensible
+- 🎯 **Content-Based Recommendation Engine**  
+  TF-IDF–based semantic similarity with genre-aware feature enrichment
 
+
+- 🧠 **Applied ML Personalization (Soft Constraints)**  
+  User preferences influence ranking via weighted scoring — not hard filters
+
+
+- 🏗️ **Data Engineering–First Design**  
+  Canonical movie schema, validation, normalization, and format auto-detection
+
+
+- 🔌 **Multi-Interface Access**  
+  - Streamlit Web App  
+  - Command-Line Interface (CLI)  
+  - Python API for integration
+
+
+- ⚡ **Performance-Oriented**  
+  Feature caching and efficient similarity computation for sub-second results
+
+
+- 🧩 **Clean, Extensible Architecture**  
+  Modular layers built for testing, scalability, and future model upgrades
 ---
 
 ## Quick Start
@@ -24,8 +50,8 @@ A production-ready movie recommendation system with content-based filtering, per
 
 ```bash
 # Clone repository
-git clone https://github.com/yourusername/movie-recommendation-engine.git
-cd movie-recommendation-engine
+git clone https://github.com/IshitaJaiswal16/CineSense.git
+cd CineSense
 
 # Install dependencies
 pip install -r requirements.txt
@@ -189,7 +215,7 @@ Your dataset needs these fields (with any column names):
 ## Project Structure
 
 ```
-movie-recommendation-engine/
+CineSense/
 ├── models/              # Data schemas (Movie dataclass)
 ├── ingestion/           # Data loading with format detection
 │   ├── loader.py       # Main data loader
@@ -240,7 +266,7 @@ CMD ["streamlit", "run", "app/streamlit_app.py"]
 ```
 
 ```bash
-docker build -t movie-recommender .
+docker build -t CineSense .
 docker run -p 8501:8501 movie-recommender
 ```
 
