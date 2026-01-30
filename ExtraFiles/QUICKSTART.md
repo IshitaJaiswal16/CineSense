@@ -59,12 +59,13 @@ python cli/app.py --movie "Pulp Fiction" --top 10
 ```
 
 ### Use in Python
+
 ```python
 from main import MovieRecommender
 from preferences.preference_engine import UserPreferences
 
 # Initialize
-recommender = MovieRecommender('data/movies.csv')
+recommender = MovieRecommender('../data/movies.csv')
 
 # Get recommendations
 results = recommender.get_recommendations("Inception", top_k=5)

@@ -22,8 +22,8 @@ from ingestion.data_config import TMDBConfig
 
 # Initialize with TMDB format
 recommender = MovieRecommender(
-    data_path='data/movies.csv',  # Your dataset
-    config=TMDBConfig()            # TMDB configuration
+    data_path='../data/movies.csv',  # Your dataset
+    config=TMDBConfig()  # TMDB configuration
 )
 
 # Get recommendations

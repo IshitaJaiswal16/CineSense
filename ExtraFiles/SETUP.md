@@ -178,10 +178,11 @@ git push heroku main
 ### For Large Datasets
 
 1. **Enable feature caching:**
+
 ```python
 recommender = MovieRecommender(
     'data/movies.csv',
-    cache_dir='cache',
+    cache_dir='../cache',
     rebuild_features=False  # Use cached features
 )
 ```

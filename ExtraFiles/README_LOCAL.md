@@ -74,12 +74,13 @@ streamlit run app/streamlit_app.py
 ```
 
 **3. Python API:**
+
 ```python
 from main import MovieRecommender
 from preferences.preference_engine import UserPreferences
 
 # Initialize
-recommender = MovieRecommender('data/movies.csv')
+recommender = MovieRecommender('../data/movies.csv')
 
 # Get recommendations
 preferences = UserPreferences(
