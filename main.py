@@ -34,43 +34,46 @@ class MovieRecommender:
         self,
         data_path: str,
         cache_dir: str = 'cache',
-        rebuild_features: bool = False
+        rebuild_features: bool = False,
+        config: Optional['DataConfig'] = None
     ):
         """
         Initialize the recommendation system.
-        
+
         Args:
             data_path: Path to movie data CSV
             cache_dir: Directory for caching features
             rebuild_features: Whether to rebuild features from scratch
+            config: DataConfig for custom datasets (auto-detects if None)
         """
         self.data_path = data_path
         self.cache_dir = Path(cache_dir)
         self.cache_dir.mkdir(parents=True, exist_ok=True)
-        
+        self.config = config
+
         # Components
         self.movies: List[Movie] = []
         self.feature_builder: Optional[FeatureBuilder] = None
         self.similarity_engine: Optional[SimilarityEngine] = None
         self.preference_engine: Optional[PreferenceEngine] = None
-        
+
         # Initialize
         self._initialize(rebuild_features)
-    
+
     def _initialize(self, rebuild: bool) -> None:
         """
         Initialize all pipeline components.
-        
+
         Args:
             rebuild: Whether to rebuild cached features
         """
         logger.info("="*60)
         logger.info("Initializing Movie Recommendation System")
         logger.info("="*60)
-        
+
         # Step 1: Load data
         logger.info("\n[1/4] Loading movie data...")
-        loader = MovieDataLoader(self.data_path)
+        loader = MovieDataLoader(self.data_path, config=self.config)
         self.movies = loader.load()
         
         # Step 2: Build features

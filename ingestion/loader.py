@@ -14,6 +14,7 @@ import logging
 from pathlib import Path
 
 from models.movie import Movie
+from ingestion.data_config import DataConfig, auto_detect_config
 
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
@@ -23,141 +24,165 @@ class MovieDataLoader:
     """
     Loads and validates movie data from CSV files.
     Converts raw data into canonical Movie objects.
+    Now supports ANY dataset format via DataConfig!
     """
-    
-    # Required columns for validation
-    REQUIRED_COLUMNS = ['movie_id', 'title', 'genres', 'overview', 'language', 'rating']
-    
-    def __init__(self, data_path: str):
+
+    def __init__(self, data_path: str, config: Optional[DataConfig] = None):
         """
         Initialize the data loader.
-        
+
         Args:
             data_path: Path to the CSV file containing movie data
+            config: DataConfig instance for column mapping (auto-detects if None)
         """
         self.data_path = Path(data_path)
         if not self.data_path.exists():
             raise FileNotFoundError(f"Data file not found: {data_path}")
-    
+
+        self.config = config  # Will be set during load if None
+
     def _validate_schema(self, df: pd.DataFrame) -> None:
         """
-        Validate that all required columns exist.
+        Validate that all required columns exist based on config.
         Fail fast with clear error messages.
-        
+
         Args:
             df: Raw DataFrame loaded from CSV
-            
+
         Raises:
             ValueError: If required columns are missing
         """
-        missing_cols = set(self.REQUIRED_COLUMNS) - set(df.columns)
+        required_cols = self.config.get_required_columns()
+        missing_cols = set(required_cols) - set(df.columns)
         if missing_cols:
             raise ValueError(
                 f"Missing required columns: {missing_cols}\n"
-                f"Available columns: {list(df.columns)}"
+                f"Available columns: {list(df.columns)[:20]}...\n"
+                f"If your dataset has different column names, create a DataConfig."
             )
         logger.info("✓ Schema validation passed")
-    
+
     def _preprocess_dataframe(self, df: pd.DataFrame) -> pd.DataFrame:
         """
         Clean and normalize the raw DataFrame.
         Deterministic preprocessing rules.
-        
+
         Args:
-            df: Raw DataFrame
-            
+            df: Raw DataFrame (with original column names)
+
         Returns:
-            Cleaned DataFrame
+            Cleaned DataFrame (with standardized column names)
         """
         df = df.copy()
-        
-        # Handle missing values
+
+        # Map columns to standard names
+        df = self.config.map_dataframe(df)
+
+        # Handle missing values (now using standardized column names)
         df['overview'] = df['overview'].fillna('No description available')
         df['title'] = df['title'].fillna('Unknown Title')
         df['genres'] = df['genres'].fillna('Unknown')
         df['language'] = df['language'].fillna('unknown')
         df['rating'] = pd.to_numeric(df['rating'], errors='coerce').fillna(0.0)
-        
+
         # Ensure movie_id is integer
         df['movie_id'] = pd.to_numeric(df['movie_id'], errors='coerce').fillna(0).astype(int)
-        
+
         # Remove duplicates based on movie_id
         df = df.drop_duplicates(subset=['movie_id'], keep='first')
-        
+
         # Remove rows with invalid IDs
         df = df[df['movie_id'] > 0]
-        
+
         logger.info(f"✓ Preprocessed {len(df)} movies")
         return df
-    
+
     def _parse_genres(self, genre_string: str) -> List[str]:
         """
-        Parse genre string into a clean list.
-        
+        Parse genre string using config's custom parser.
+
         Args:
-            genre_string: Comma-separated genre string
-            
+            genre_string: Genre string in dataset format
+
         Returns:
             List of genre names
         """
-        if pd.isna(genre_string) or not genre_string:
-            return ['Unknown']
-        
-        # Handle different formats
-        genres = [g.strip() for g in str(genre_string).split(',')]
-        return [g for g in genres if g]
-    
+        return self.config.genre_parser(genre_string)
+
+    def _normalize_rating(self, rating: float) -> float:
+        """
+        Normalize rating using config's normalizer.
+
+        Args:
+            rating: Raw rating value
+
+        Returns:
+            Normalized rating (0-10 scale)
+        """
+        return self.config.rating_normalizer(rating)
+
     def _create_movie_object(self, row: pd.Series) -> Movie:
         """
         Convert a DataFrame row to a Movie object.
-        
+
         Args:
-            row: Single row from DataFrame
-            
+            row: Single row from DataFrame (with standardized column names)
+
         Returns:
             Movie object
         """
         # Extract release year if available
         metadata = {}
-        if 'release_date' in row:
+        if 'release_date' in row and pd.notna(row['release_date']):
             try:
                 year = pd.to_datetime(row['release_date']).year
                 metadata['release_year'] = year
             except:
                 pass
-        
-        # Add any extra metadata
-        for col in row.index:
-            if col not in self.REQUIRED_COLUMNS and pd.notna(row[col]):
+
+        # Add any extra metadata from optional columns
+        for col in ['popularity', 'vote_count', 'runtime']:
+            if col in row.index and pd.notna(row[col]):
                 metadata[col] = row[col]
-        
+
+        # Parse genres using config
+        genres = self._parse_genres(row['genres'])
+
+        # Normalize rating using config
+        rating = self._normalize_rating(row['rating'])
+
         return Movie(
             movie_id=int(row['movie_id']),
             title=str(row['title']),
-            genres=self._parse_genres(row['genres']),
+            genres=genres,
             overview=str(row['overview']),
             language=str(row['language']),
-            rating=float(row['rating']),
+            rating=rating,
             metadata=metadata
         )
-    
+
     def load(self) -> List[Movie]:
         """
         Load and process the movie dataset.
-        
+
         Returns:
             List of Movie objects
         """
         logger.info(f"Loading data from {self.data_path}")
-        
+
         # Load CSV
         df = pd.read_csv(self.data_path)
         logger.info(f"Loaded {len(df)} raw records")
-        
-        # Validate schema
+
+        # Auto-detect config if not provided
+        if self.config is None:
+            logger.info("No config provided, attempting auto-detection...")
+            self.config = auto_detect_config(df)
+
+        # Validate schema (before mapping)
         self._validate_schema(df)
-        
-        # Preprocess
+
+        # Preprocess (includes column mapping)
         df = self._preprocess_dataframe(df)
         
         # Convert to Movie objects
