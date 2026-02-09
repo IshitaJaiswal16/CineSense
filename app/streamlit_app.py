@@ -15,7 +15,7 @@ from preferences.preference_engine import UserPreferences
 
 # Page configuration
 st.set_page_config(
-    page_title="Movie Recommender",
+    page_title="CineSense",
     page_icon="🎬",
     layout="wide",
     initial_sidebar_state="expanded"
@@ -64,7 +64,6 @@ def display_movie_card(movie_data, rank):
     <div class="movie-card">
         <div class="movie-title">#{rank} {movie_data['title']}</div>
         <div class="movie-meta">
-            <span class="score-badge">Score: {movie_data['score']:.3f}</span>
             <span class="score-badge">⭐ {movie_data['rating']}/10</span>
         </div>
         <div class="movie-meta" style="margin-top: 0.5rem;">
@@ -79,11 +78,11 @@ def display_movie_card(movie_data, rank):
 
 def main():
     """Main Streamlit app."""
-    
+
     # Header
-    st.title("🎬 Movie Recommendation System")
+    st.title("🎬 CineSense")
     st.markdown("### Discover your next favorite movie!")
-    
+
     # Initialize recommender
     try:
         recommender = load_recommender()
@@ -255,7 +254,7 @@ def main():
     else:
         # Welcome message when no search has been performed
         st.info("""
-        👋 **Welcome to the Movie Recommendation System!**
+        👋 **Welcome to CineSense!**
         
         **How to use:**
         1. 🔍 **Search** for a movie (use dropdown OR type the name)
